@@ -367,7 +367,7 @@ def execute_python_factory(sandbox: Optional[Any] = None) -> ToolDef:
 
 
 # ---------------------------------------------------------------------------
-# Research sandbox (persistent Python namespace via model_flow sandbox server)
+# Research sandbox (persistent Python namespace via the serac sandbox server)
 # ---------------------------------------------------------------------------
 
 
@@ -380,7 +380,7 @@ def _execute_research_executor(code: str, timeout: int = 120, **kwargs: Any) -> 
         return (
             "ERROR: Research sandbox is not available. "
             "Cannot connect to localhost:9876. "
-            "Is the sandbox server running? (python3 -m model_flow.sandbox.server)"
+            "Is the sandbox server running? (python3 -m agent_framework.sandbox.server)"
         )
     try:
         return rs.execute(code)
@@ -391,16 +391,17 @@ def _execute_research_executor(code: str, timeout: int = 120, **kwargs: Any) -> 
 def research_execute_factory(sandbox: Optional[Any] = None) -> ToolDef:
     """Factory: returns ToolDef for research_execute.
 
-    Connects to the model_flow sandbox server at localhost:9876.
-    The persistent namespace has: s (Sandbox), df (OHLCV data),
-    np, pd, check_causality, and any previously-defined variables.
+    Connects to the serac sandbox server (agent_framework.sandbox) at
+    localhost:9876. The persistent namespace has: s (sandbox instance, if the
+    server was started with one), df (data panel, if the server was started
+    with one), np, pd, and any previously-defined variables.
     """
     return ToolDef(
         name="research_execute",
         description="Execute Python code in the persistent research sandbox "
-                    "(model_flow sandbox server at localhost:9876). "
-                    "Access to OHLCV data (df), sandbox instance (s), "
-                    "numpy (np), pandas (pd), and causality checker.",
+                    "(serac sandbox server (agent_framework.sandbox) at localhost:9876). "
+                    "Access to the data panel (df, if the server was started with one), "
+                    "sandbox instance (s), numpy (np), and pandas (pd).",
         parameters={
             "type": "object",
             "properties": {

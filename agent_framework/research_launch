@@ -7,9 +7,9 @@
 #   agent_framework/research_launch status  # Check if running
 #   agent_framework/research_launch logs    # View container logs
 #
-# The container runs the model_flow sandbox server, which provides a persistent
-# Python namespace with access to OHLCV data, PyTorch, TensorFlow, and all ML
-# libraries.
+# The container runs the bundled sandbox server (agent_framework.sandbox),
+# which provides a persistent Python namespace with access to PyTorch,
+# TensorFlow, and all ML libraries.
 #
 # Security:
 # - --network none: no outbound network access
@@ -23,7 +23,6 @@ set -euo pipefail
 
 CONTAINER_NAME="research-sandbox"
 IMAGE_NAME="research-sandbox:latest"
-HOST_DATA="/path/to/market/data"
 HOST_REPO="/path/to/repo/0"
 HOST_WORKSPACE="/tmp/agent_workspace"
 UNIX_SOCKET="/tmp/agent_workspace/sandbox.sock"
@@ -70,13 +69,12 @@ cmd_start() {
         --security-opt no-new-privileges \
         --read-only \
         --tmpfs /tmp:rw,noexec,nosuid,nodev,size=1g \
-        -v "$HOST_DATA:/data:ro" \
         -v "$HOST_REPO:/repo:ro" \
         -v /tmp/agent_workspace:/workspace:rw \
         --user "$(id -u):$(id -g)" \
         -e CUDA_VISIBLE_DEVICES="0" \
         "$IMAGE_NAME" \
-        python3 -m model_flow.sandbox.server
+        python3 -m agent_framework.sandbox.server
 
     # Wait for the server to be ready
     log "Waiting for sandbox server to start..."

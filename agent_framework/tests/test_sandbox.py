@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agent_framework.sandbox import Sandbox, SandboxError
+from agent_framework.docker_sandbox import Sandbox, SandboxError
 
 _FAKE_IMAGE = "python:3.12-slim"
 _FAKE_REPO = "/home/user/dev/project/0"

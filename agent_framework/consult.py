@@ -162,7 +162,7 @@ GUIDELINES:
 SANDBOX_INSTRUCTIONS = """\
 SANDBOX MODE: You are running in a Docker container.
 - The project repository is mounted read-only at /repo
-- Use relative paths (e.g., "agent_framework/sandbox.py") or /repo/ paths
+- Use relative paths (e.g., "agent_framework/docker_sandbox.py") or /repo/ paths
 - Write operations go to /tmp/workspace (writable)
 - No network access is available from tools
 """

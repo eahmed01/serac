@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Adapter for the model_flow persistent research sandbox.
+"""Adapter for the bundled sandbox server (agent_framework.sandbox).
 
 Connects to the running sandbox server via TCP or Unix socket and provides
 a synchronous interface compatible with agent_framework tool executors.
@@ -53,7 +53,7 @@ class ResearchSandboxError(RuntimeError):
 
 
 class ResearchSandbox:
-    """Synchronous adapter for the model_flow persistent research sandbox.
+    """Synchronous adapter for the bundled sandbox server (agent_framework.sandbox).
 
     Connects to the sandbox server via TCP or Unix socket.
     Provides execute(), evaluate(), list_vars(), get_var_meta() methods
@@ -125,7 +125,7 @@ class ResearchSandbox:
 
     async def _execute_async(self, code: str) -> str:
         """Async implementation of execute."""
-        from model_flow.sandbox.client import SandboxClient, ConnectionClosed
+        from agent_framework.sandbox.client import SandboxClient, ConnectionClosed
 
         try:
             async with SandboxClient(
@@ -161,7 +161,7 @@ class ResearchSandbox:
 
     async def _eval_async(self, expression: str) -> str:
         """Async implementation of evaluate."""
-        from model_flow.sandbox.client import SandboxClient, ConnectionClosed
+        from agent_framework.sandbox.client import SandboxClient, ConnectionClosed
 
         try:
             async with SandboxClient(
@@ -182,7 +182,7 @@ class ResearchSandbox:
         return loop.run_until_complete(self._list_vars_async())
 
     async def _list_vars_async(self) -> list[str]:
-        from model_flow.sandbox.client import SandboxClient, ConnectionClosed
+        from agent_framework.sandbox.client import SandboxClient, ConnectionClosed
 
         try:
             async with SandboxClient(
@@ -201,7 +201,7 @@ class ResearchSandbox:
         return loop.run_until_complete(self._get_var_meta_async(name))
 
     async def _get_var_meta_async(self, name: str) -> dict:
-        from model_flow.sandbox.client import SandboxClient, ConnectionClosed
+        from agent_framework.sandbox.client import SandboxClient, ConnectionClosed
 
         try:
             async with SandboxClient(

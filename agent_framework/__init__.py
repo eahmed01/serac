@@ -22,7 +22,7 @@ from agent_framework.memory import MemoryStore
 
 # sandbox and model_pool modules are not yet created — import conditionally
 try:
-    from agent_framework.sandbox import Sandbox, SandboxError
+    from agent_framework.docker_sandbox import Sandbox, SandboxError
 except ImportError:
     Sandbox = SandboxError = None  # type: ignore[assignment,misc]
 

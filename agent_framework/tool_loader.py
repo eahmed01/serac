@@ -228,7 +228,7 @@ def default_exec_tools(sandbox: Optional[Any] = None) -> dict[str, str]:
 
 
 def default_research_tools(sandbox: Optional[Any] = None) -> dict[str, str]:
-    """Research sandbox tools (persistent Python namespace via model_flow)."""
+    """Research sandbox tools (persistent Python namespace via the bundled sandbox server)."""
     return {
         "research_execute": "agent_framework.builtins:research_execute_factory",
     }

@@ -21,11 +21,6 @@ scikit-learn
 lightgbm
 xgboost
 
-# Networking for sandbox server
-aiohttp
-grpcio
-protobuf
-
 # Utilities
 pyyaml
 requests
