@@ -23,7 +23,7 @@ Usage:
     python -m agent_framework.consult "Continue the analysis" --session project-review
 
     # With workspace restriction
-    python -m agent_framework.consult "Find security issues" --workspace ~/dev/fonda/0
+    python -m agent_framework.consult "Find security issues" --workspace ~/dev/project/0
 
     # Programmatic (Hermes integration)
     from agent_framework.consult import consult
@@ -31,7 +31,7 @@ Usage:
         goal="Research this topic",
         model="opus",  # or "local", "sonnet", etc.
         session_id="my-research",
-        workspace="/home/xeio/dev/fonda/0",
+        workspace="/home/user/dev/project/0",
     )
 
 Available models:
@@ -70,7 +70,7 @@ from typing import Any, Optional
 # Load API keys from ~/.exa.api (Exa) and .env files
 _ENV_PATHS = [
     Path.home() / ".exa.api",  # Exa API key
-    Path.home() / ".hermes" / "profiles" / "fonda" / ".env",
+    Path.home() / ".hermes" / "profiles" / "default" / ".env",
 ]
 for _env_path in _ENV_PATHS:
     if _env_path.exists():
@@ -92,7 +92,7 @@ logger = logging.getLogger(__name__)
 SESSION_DIR = Path.home() / ".hermes" / "agent_sessions"
 
 # Default workspace root (repo root)
-DEFAULT_WORKSPACE = Path.home() / "dev" / "fonda" / "0"
+DEFAULT_WORKSPACE = Path.home() / "dev" / "project" / "0"
 
 # Available models — same as consultation_ask
 MODEL_CONFIGS = {

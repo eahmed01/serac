@@ -14,8 +14,22 @@ def write_config(tmp_path: Path, targets: dict) -> Path:
     return path
 
 
-def test_default_config_resolves_local_target():
-    path = Path(__file__).parents[1] / "price_anomaly_model_targets.yaml"
+def test_default_config_resolves_local_target(tmp_path):
+    path = write_config(tmp_path, {
+        "local_qwen": {
+            "provider": "vllm",
+            "endpoint": "http://127.0.0.1:7999/v1",
+            "model": "Qwen/Qwen3.8-27B-FP8",
+            "max_tokens": 24576,
+            "vllm": {
+                "reasoning_effort": "xhigh",
+                "chat_template_kwargs": {
+                    "enable_thinking": True,
+                    "preserve_thinking": False,
+                },
+            },
+        },
+    })
     target = model_targets.resolve_model_target(path, "local_qwen", environ={})
     assert target.provider == "vllm"
     assert target.model == "Qwen/Qwen3.8-27B-FP8"

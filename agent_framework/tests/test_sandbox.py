@@ -13,7 +13,7 @@ import pytest
 from agent_framework.sandbox import Sandbox, SandboxError
 
 _FAKE_IMAGE = "python:3.12-slim"
-_FAKE_REPO = "/home/xeio/dev/fonda/0"
+_FAKE_REPO = "/home/user/dev/project/0"
 _FAKE_WORKSPACE = "/tmp/agent_workspace"
 
 
@@ -230,8 +230,8 @@ class TestInit:
     def test_expands_tilde_in_repo_path(self):
         import os
 
-        sb = Sandbox(repo_path="~/dev/fonda/0")
-        assert sb.repo_path == os.path.expanduser("~/dev/fonda/0")
+        sb = Sandbox(repo_path="~/dev/project/0")
+        assert sb.repo_path == os.path.expanduser("~/dev/project/0")
 
     def test_allows_repo_same_as_workspace(self):
         """Repo equal to workspace is allowed."""
@@ -265,18 +265,18 @@ class TestInit:
         with pytest.raises(SandboxError, match="mounted higher"):
             Sandbox(
                 image="python:3.12-slim",
-                repo_path="/home/xeio",
-                workspace_path="/home/xeio/dev/fonda/0",
+                repo_path="/home/user",
+                workspace_path="/home/user/dev/project/0",
             )
 
     def test_allows_unrelated_paths(self):
         """Unrelated paths at same depth are allowed."""
         sb = Sandbox(
             image="python:3.12-slim",
-            repo_path="/home/xeio/dev/fonda/0",
+            repo_path="/home/user/dev/project/0",
             workspace_path="/tmp/agent_workspace",
         )
-        assert sb.repo_path == "/home/xeio/dev/fonda/0"
+        assert sb.repo_path == "/home/user/dev/project/0"
 
     def test_expands_tilde(self):
         """Tilde paths are expanded before checking."""
@@ -284,7 +284,7 @@ class TestInit:
 
         sb = Sandbox(
             image="python:3.12-slim",
-            repo_path="~/dev/fonda/0",
+            repo_path="~/dev/project/0",
             workspace_path="/tmp/test_workspace",
         )
         assert sb.repo_path.startswith(os.path.expanduser("~"))

@@ -23,8 +23,8 @@ set -euo pipefail
 
 CONTAINER_NAME="research-sandbox"
 IMAGE_NAME="research-sandbox:latest"
-HOST_DATA="/work/fast28/user/xeio/project/data"
-HOST_REPO="/home/xeio/dev/fonda/0"
+HOST_DATA="/path/to/market/data"
+HOST_REPO="/path/to/repo/0"
 HOST_WORKSPACE="/tmp/agent_workspace"
 UNIX_SOCKET="/tmp/agent_workspace/sandbox.sock"
 

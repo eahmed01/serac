@@ -14,8 +14,8 @@
 #     --security-opt no-new-privileges \
 #     --read-only \
 #     --tmpfs /tmp:rw,noexec,nosuid,nodev,size=1g \
-#     -v /work/fast28/user/xeio/project/data:/data:ro \
-#     -v /home/xeio/dev/fonda/0:/repo:ro \
+#     -v /path/to/market/data:/data:ro \
+#     -v /path/to/repo/0:/repo:ro \
 #     -v /tmp/agent_workspace:/workspace:rw \
 #     --user $(id -u):$(id -g) \
 #     research-sandbox:latest

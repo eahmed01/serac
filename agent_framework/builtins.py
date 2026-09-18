@@ -492,7 +492,7 @@ def _sec_search_executor(query: str = "", cik: str = "", max_results: int = 10, 
         if not cik10.isdigit() or len(cik10) != 10:
             return json.dumps({"error": "cik must be a numeric SEC CIK"})
         url = f"https://data.sec.gov/submissions/CIK{cik10}.json"
-        req = urllib.request.Request(url, headers={"User-Agent": "Rebo research contact research@example.com"})
+        req = urllib.request.Request(url, headers={"User-Agent": "Serac research contact research@example.com"})
         with urllib.request.urlopen(req, timeout=30) as response:
             data = json.loads(response.read().decode("utf-8"))
         recent = data.get("filings", {}).get("recent", {})
@@ -674,7 +674,7 @@ def _sec_fetch_executor(cik: str, accession_number: str, document_name: str, max
         if not cik10.isdigit() or len(cik10) != 10 or not acc.isdigit() or not doc or "/" in doc or "\\" in doc or ".." in doc:
             return json.dumps({"error": "invalid CIK, accession number, or document name"})
         url = f"https://www.sec.gov/Archives/edgar/data/{int(cik10)}/{acc}/{urllib.parse.quote(doc)}"
-        req = urllib.request.Request(url, headers={"User-Agent": "Rebo research contact research@example.com"})
+        req = urllib.request.Request(url, headers={"User-Agent": "Serac research contact research@example.com"})
         with urllib.request.urlopen(req, timeout=60) as response:
             raw = response.read(int(max_chars) * 4).decode("utf-8", errors="replace")
         import re
@@ -750,7 +750,7 @@ def _web_fetch_executor(url: str = "", max_chars: int = DEFAULT_WEB_FETCH_MAX_CH
         return json.dumps({"error": f"could not validate host address: {exc}"})
 
     headers = {
-        "User-Agent": "Rebo research contact research@example.com",
+        "User-Agent": "Serac research contact research@example.com",
         "Accept": "text/html,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.5",
     }
     req = urllib.request.Request(raw_url, headers=headers)
