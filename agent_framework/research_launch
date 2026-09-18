@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+# Launch the research sandbox container with full ML stack and GPU access.
+#
+# Usage:
+#   agent_framework/research_launch start   # Start the container
+#   agent_framework/research_launch stop    # Stop the container
+#   agent_framework/research_launch status  # Check if running
+#   agent_framework/research_launch logs    # View container logs
+#
+# The container runs the model_flow sandbox server, which provides a persistent
+# Python namespace with access to OHLCV data, PyTorch, TensorFlow, and all ML
+# libraries.
+#
+# Security:
+# - --network none: no outbound network access
+# - --cap-drop ALL: no Linux capabilities
+# - --security-opt no-new-privileges: no privilege escalation
+# - --read-only: immutable root filesystem
+# - --tmpfs /tmp: ephemeral writable /tmp with size limit
+# - --gpus '"device=0"': only GPU 0 (GPU 1 is reserved for vLLM)
+
+set -euo pipefail
+
+CONTAINER_NAME="research-sandbox"
+IMAGE_NAME="research-sandbox:latest"
+HOST_DATA="/work/fast28/user/xeio/project/data"
+HOST_REPO="/home/xeio/dev/fonda/0"
+HOST_WORKSPACE="/tmp/agent_workspace"
+UNIX_SOCKET="/tmp/agent_workspace/sandbox.sock"
+
+log() {
+    echo "[research_launch] $*" >&2
+}
+
+cleanup_old() {
+    # Remove any stale container with the same name
+    if docker container inspect "$CONTAINER_NAME" &>/dev/null; then
+        log "Removing stale container: $CONTAINER_NAME"
+        docker rm -f "$CONTAINER_NAME" &>/dev/null
+    fi
+}
+
+build_image() {
+    if ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
+        log "Building Docker image: $IMAGE_NAME"
+        docker build \
+            -f agent_framework/research.Dockerfile \
+            -t "$IMAGE_NAME" \
+            . || {
+            log "Failed to build image"
+            return 1
+        }
+        log "Image built successfully"
+    fi
+}
+
+cmd_start() {
+    cleanup_old
+    build_image
+
+    # Create workspace directory if needed
+    mkdir -p "$(dirname "$UNIX_SOCKET")"
+
+    log "Starting research sandbox container..."
+    docker run -d \
+        --name "$CONTAINER_NAME" \
+        --gpus '"device=0"' \
+        --network none \
+        --cap-drop ALL \
+        --security-opt no-new-privileges \
+        --read-only \
+        --tmpfs /tmp:rw,noexec,nosuid,nodev,size=1g \
+        -v "$HOST_DATA:/data:ro" \
+        -v "$HOST_REPO:/repo:ro" \
+        -v /tmp/agent_workspace:/workspace:rw \
+        --user "$(id -u):$(id -g)" \
+        -e CUDA_VISIBLE_DEVICES="0" \
+        "$IMAGE_NAME" \
+        python3 -m model_flow.sandbox.server
+
+    # Wait for the server to be ready
+    log "Waiting for sandbox server to start..."
+    for i in {1..30}; do
+        if docker exec "$CONTAINER_NAME" python3 -c "
+import socket
+try:
+    sock = socket.create_connection(('127.0.0.1', 9876), timeout=1)
+    sock.close()
+    exit(0)
+except:
+    exit(1)
+" 2>/dev/null; then
+            log "Sandbox server is ready on localhost:9876"
+            return 0
+        fi
+        sleep 1
+    done
+
+    log "ERROR: Sandbox server did not start within 30 seconds"
+    docker logs "$CONTAINER_NAME" >&2
+    return 1
+}
+
+cmd_stop() {
+    if docker container inspect "$CONTAINER_NAME" &>/dev/null; then
+        log "Stopping container: $CONTAINER_NAME"
+        docker stop "$CONTAINER_NAME"
+        docker rm "$CONTAINER_NAME"
+        log "Container stopped and removed"
+    else
+        log "Container not running"
+    fi
+}
+
+cmd_status() {
+    if docker container inspect "$CONTAINER_NAME" &>/dev/null; then
+        echo "Running: $(docker inspect --format='{{.State.Running}}' "$CONTAINER_NAME")"
+        echo "Started: $(docker inspect --format='{{.State.StartedAt}}' "$CONTAINER_NAME")"
+        echo "Exit code: $(docker inspect --format='{{.State.ExitCode}}' "$CONTAINER_NAME")"
+    else
+        echo "Status: not running"
+    fi
+}
+
+cmd_logs() {
+    docker logs --tail 50 "$CONTAINER_NAME" 2>&1
+}
+
+# Main
+case "${1:-status}" in
+    start)  cmd_start ;;
+    stop)   cmd_stop ;;
+    status) cmd_status ;;
+    logs)   cmd_logs ;;
+    *)
+        echo "Usage: $0 {start|stop|status|logs}"
+        exit 1
+        ;;
+esac

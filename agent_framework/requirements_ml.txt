@@ -1,0 +1,31 @@
+# ML Research Sandbox requirements
+# Install at build time for network-isolated runtime
+
+# Core ML
+torch==2.9.0+cu128
+torchvision==0.24.0+cu128
+--extra-index-url https://download.pytorch.org/whl/cu128
+
+tensorflow==2.21.0
+keras==3.15.0
+
+# Data processing
+numpy
+pandas
+pyarrow
+feather-format
+
+# ML libraries
+scipy
+scikit-learn
+lightgbm
+xgboost
+
+# Networking for sandbox server
+aiohttp
+grpcio
+protobuf
+
+# Utilities
+pyyaml
+requests

@@ -1,0 +1,16 @@
+{
+    "project": "sample-analysis",
+    "version": "1.0",
+    "analysis": {
+        "lookback_days": 20,
+        "forward_days": 5,
+        "lookahead_return": 0.05,
+        "volume_threshold": 1.5,
+        "zscore_threshold": 2.0
+    },
+    "output": {
+        "format": "json",
+        "precision": 4,
+        "include_raw": false
+    }
+}
