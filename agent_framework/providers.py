@@ -109,7 +109,18 @@ class VLLMProvider(Provider):
         model: Model name to use.
         api_key: API key (can be dummy for local servers).
         max_tokens: Maximum tokens in the response.
+        reasoning_effort: Optional thinking/reasoning effort level. When set,
+            the model produces a thinking pass whose tokens count against
+            ``max_tokens`` — a long thinking pass can exhaust the entire
+            budget, leaving 0 tokens for the visible answer (the turn then
+            finishes with ``finish_reason="length"``). Disable thinking for
+            non-reasoning tasks (``None``) or raise ``max_tokens`` accordingly.
+        chat_template_kwargs: Optional chat-template kwargs sent as extra body.
         retry_config: Retry configuration. None = no retries.
+        timeout: Optional HTTP timeout in seconds (applied to connect/read/
+            write/pool) passed to the OpenAI client. None = SDK default
+            (~600s read). Raise this for legitimately long generations that
+            exceed the SDK default (e.g. very large prompts).
     """
 
     def __init__(
@@ -121,6 +132,7 @@ class VLLMProvider(Provider):
         reasoning_effort: str | None = "high",
         chat_template_kwargs: Optional[dict[str, Any]] = None,
         retry_config: Optional[RetryConfig] = None,
+        timeout: Optional[float] = None,
     ) -> None:
         import openai  # noqa: PLC0415  # lazy import
 
@@ -131,10 +143,13 @@ class VLLMProvider(Provider):
         self.reasoning_effort = "xhigh" if reasoning_effort == "high" else reasoning_effort
         self.chat_template_kwargs = dict(chat_template_kwargs or {})
         self.retry_config = retry_config or DEFAULT_RETRY
-        self._client: Any = openai.OpenAI(
-            base_url=base_url,
-            api_key=api_key,
-        )
+        client_kwargs: dict[str, Any] = {
+            "base_url": base_url,
+            "api_key": api_key,
+        }
+        if timeout is not None:
+            client_kwargs["timeout"] = timeout
+        self._client: Any = openai.OpenAI(**client_kwargs)
 
     def _create(self, kwargs: dict[str, Any]):
         """Wrapper for API call — used by retry logic."""
@@ -218,6 +233,8 @@ class AnthropicProvider(Provider):
         model: Model name. Defaults to claude-sonnet-4-20250514.
         max_tokens: Maximum tokens in the response.
         retry_config: Retry configuration. None = no retries.
+        timeout: Optional HTTP timeout in seconds passed to the Anthropic
+            client. None = SDK default.
     """
 
     def __init__(
@@ -226,11 +243,15 @@ class AnthropicProvider(Provider):
         model: str = "claude-sonnet-4-20250514",
         max_tokens: int = 4096,
         retry_config: Optional[RetryConfig] = None,
+        timeout: Optional[float] = None,
     ) -> None:
         self.model = model
         self.max_tokens = max_tokens
         self.retry_config = retry_config or DEFAULT_RETRY
-        self._client = Anthropic(api_key=api_key)
+        client_kwargs: dict[str, Any] = {"api_key": api_key}
+        if timeout is not None:
+            client_kwargs["timeout"] = timeout
+        self._client = Anthropic(**client_kwargs)
 
     # -- internal helpers --
 
@@ -355,6 +376,12 @@ class OpenAIProvider(Provider):
     ``responses`` mode uses typed function-call continuations and
     ``previous_response_id`` so reasoning items remain associated with local
     tool results.
+
+    Args:
+        timeout: Optional HTTP timeout in seconds (applied to connect/read/
+            write/pool) passed to the OpenAI client. None = SDK default
+            (~600s read). Raise this for legitimately long generations that
+            exceed the SDK default.
     """
 
     def __init__(
@@ -367,6 +394,7 @@ class OpenAIProvider(Provider):
         api_mode: str = "chat_completions",
         reasoning_effort: str | None = None,
         retry_config: Optional[RetryConfig] = None,
+        timeout: Optional[float] = None,
     ) -> None:
         import openai  # noqa: PLC0415  # lazy import
 
@@ -393,6 +421,8 @@ class OpenAIProvider(Provider):
         client_kwargs: dict[str, Any] = {"api_key": api_key}
         if base_url:
             client_kwargs["base_url"] = base_url
+        if timeout is not None:
+            client_kwargs["timeout"] = timeout
         self._client = openai.OpenAI(**client_kwargs)
 
     def _create(self, kwargs: dict[str, Any]):

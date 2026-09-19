@@ -63,6 +63,15 @@ from agent_framework.tracing import (
     get_trace_id,
     clear_trace,
 )
+from agent_framework.model_targets import (
+    ModelTarget,
+    ModelTargetError,
+    SUPPORTED_VERSION,
+    SUPPORTED_PROVIDERS,
+    load_model_targets,
+    resolve_model_target,
+    make_provider,
+)
 
 __all__ = [
     "AgentLoop",
@@ -101,4 +110,12 @@ __all__ = [
     "set_trace_id",
     "get_trace_id",
     "clear_trace",
+    # model targets
+    "ModelTarget",
+    "ModelTargetError",
+    "SUPPORTED_VERSION",
+    "SUPPORTED_PROVIDERS",
+    "load_model_targets",
+    "resolve_model_target",
+    "make_provider",
 ]

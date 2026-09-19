@@ -199,13 +199,19 @@ class AgentLoop:
             # partial reasoning or a cut-off structured answer.  Fail closed
             # instead of returning a possibly-incomplete answer.
             if response.finish_reason == "length":
+                reason = "completion truncated (finish_reason=length)"
+                if response.reasoning_content:
+                    reason += (
+                        "; reasoning/thinking may have consumed the entire "
+                        "max_tokens budget — increase max_tokens or disable thinking"
+                    )
                 logger.error(
-                    "[%s] turn %d: completion truncated (finish_reason=length) — failing closed",
-                    self.name, self.turn_count,
+                    "[%s] turn %d: %s — failing closed",
+                    self.name, self.turn_count, reason,
                 )
                 final_text = ""
                 self.last_response_rejected = True
-                self.last_rejection_reason = "completion truncated (finish_reason=length)"
+                self.last_rejection_reason = reason
                 break
 
             final_text = response.text

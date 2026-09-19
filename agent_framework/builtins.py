@@ -45,9 +45,21 @@ logger = logging.getLogger(__name__)
 
 
 def _read_file_executor(
-    path: str, offset: int = 1, limit: int = 500, sandbox: Any = None, **kwargs: Any
+    path: str, offset: int = 1, limit: int = 500, raw: bool = False,
+    sandbox: Any = None, **kwargs: Any
 ) -> str:
-    """Read a file with line numbers and pagination."""
+    """Read a file with line numbers and pagination.
+
+    Args:
+        path: File path to read.
+        offset: 1-indexed line to start from.
+        limit: Maximum number of lines to return.
+        raw: When True, return the selected line range without ``N|``
+            line-number prefixes and without the ``Lines X-Y of Z:`` header —
+            lower token cost for large files.
+        sandbox: Optional sandbox; reads are delegated to it (raw is ignored
+            when a sandbox is in use).
+    """
     if sandbox is not None:
         return sandbox.read_file(path)
     _guard_read_path(path)
@@ -55,6 +67,8 @@ def _read_file_executor(
         lines = f.readlines()
     total = len(lines)
     selected = lines[offset - 1 : offset + limit - 1]
+    if raw:
+        return "".join(selected)
     result = []
     for i, line in enumerate(selected, start=offset):
         result.append(f"{i}|{line}")
@@ -63,8 +77,8 @@ def _read_file_executor(
 
 def read_file_factory(sandbox: Optional[Any] = None) -> ToolDef:
     """Factory: returns ToolDef for read_file."""
-    def executor(path: str, offset: int = 1, limit: int = 500, **kwargs: Any) -> str:
-        return _read_file_executor(path, offset, limit, sandbox=sandbox)
+    def executor(path: str, offset: int = 1, limit: int = 500, raw: bool = False, **kwargs: Any) -> str:
+        return _read_file_executor(path, offset, limit, raw=raw, sandbox=sandbox)
 
     return ToolDef(
         name="read_file",
@@ -75,6 +89,7 @@ def read_file_factory(sandbox: Optional[Any] = None) -> ToolDef:
                 "path": {"type": "string", "description": "Path to the file"},
                 "offset": {"type": "integer", "description": "Line number to start from (1-indexed)", "default": 1},
                 "limit": {"type": "integer", "description": "Maximum number of lines to read", "default": 500},
+                "raw": {"type": "boolean", "description": "Return raw file content without line-number prefixes (lower token cost; use for large files)", "default": False},
             },
             "required": ["path"],
         },
