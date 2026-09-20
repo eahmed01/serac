@@ -14,7 +14,7 @@ SUPPORTED_VERSION = 1
 SUPPORTED_PROVIDERS = {"vllm", "openai"}
 _TARGET_KEYS = {"provider", "endpoint", "model", "max_tokens", "credential_env", "vllm", "openai"}
 _ROOT_KEYS = {"version", "targets"}
-_VLLM_KEYS = {"reasoning_effort", "chat_template_kwargs"}
+_VLLM_KEYS = {"reasoning_effort", "chat_template_kwargs", "timeout"}
 _OPENAI_KEYS = {"base_url", "max_tokens_parameter", "api_mode", "reasoning_effort"}
 _OPENAI_TOKEN_PARAMETERS = {"max_tokens", "max_completion_tokens"}
 _OPENAI_API_MODES = {"chat_completions", "responses"}
@@ -109,10 +109,17 @@ def _target_from_raw(name: str, raw: Any) -> ModelTarget:
         chat_template_kwargs = vllm_raw.get("chat_template_kwargs", {})
         if not isinstance(chat_template_kwargs, dict):
             raise ModelTargetError(f"target '{name}' vllm chat_template_kwargs must be a mapping")
+        timeout = vllm_raw.get("timeout")
+        if timeout is not None and (
+            not isinstance(timeout, (int, float)) or isinstance(timeout, bool) or timeout <= 0
+        ):
+            raise ModelTargetError(f"target '{name}' vllm timeout must be a positive number (seconds)")
         options = {
             "reasoning_effort": reasoning_effort,
             "chat_template_kwargs": dict(chat_template_kwargs),
         }
+        if timeout is not None:
+            options["timeout"] = float(timeout)
         return ModelTarget(name, provider, model, max_tokens, endpoint=endpoint.rstrip("/"), credential_env=credential_env, vllm_options=options)
 
     if raw.get("endpoint") is not None:
@@ -193,6 +200,8 @@ def make_provider(target: ModelTarget, environ: Mapping[str, str] | None = None)
             "reasoning_effort": options.get("reasoning_effort"),
             "chat_template_kwargs": options.get("chat_template_kwargs"),
         }
+        if options.get("timeout") is not None:
+            provider_kwargs["timeout"] = options["timeout"]
         if target.credential_env:
             if not env.get(target.credential_env):
                 raise ModelTargetError(f"credential_env '{target.credential_env}' is not set in the environment")

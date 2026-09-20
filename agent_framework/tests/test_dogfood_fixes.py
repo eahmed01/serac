@@ -54,6 +54,53 @@ class TestProviderTimeout:
         p = AnthropicProvider(api_key="sk-test")
         assert p._client.timeout != 900.0
 
+    def test_vllm_timeout_flows_from_target_yaml_to_client(self, monkeypatch, tmp_path):
+        """vllm: {timeout: 3600} in a targets yaml reaches the SDK client via make_provider."""
+        import yaml
+
+        import agent_framework.model_targets as mt
+
+        path = tmp_path / "targets.yaml"
+        path.write_text(yaml.safe_dump({"version": 1, "targets": {
+            "local": {
+                "provider": "vllm",
+                "endpoint": "http://localhost:7999/v1/",
+                "model": "local-model",
+                "vllm": {"timeout": 3600},
+            },
+        }}, sort_keys=False))
+        target = mt.resolve_model_target(path, "local")
+        assert target.vllm_options is not None
+        assert target.vllm_options["timeout"] == 3600.0
+        captured = {}
+
+        class FakeVLLM:
+            def __init__(self, **kwargs):
+                captured.update(kwargs)
+
+        monkeypatch.setattr(mt, "VLLMProvider", FakeVLLM)
+        mt.make_provider(target)
+        assert captured["timeout"] == 3600.0
+
+    def test_vllm_invalid_timeout_is_rejected_at_parse(self, tmp_path):
+        import pytest
+
+        import yaml
+
+        import agent_framework.model_targets as mt
+
+        path = tmp_path / "targets.yaml"
+        path.write_text(yaml.safe_dump({"version": 1, "targets": {
+            "local": {
+                "provider": "vllm",
+                "endpoint": "http://localhost:7999/v1/",
+                "model": "local-model",
+                "vllm": {"timeout": -1},
+            },
+        }}, sort_keys=False))
+        with pytest.raises(mt.ModelTargetError, match="timeout"):
+            mt.load_model_targets(path)
+
 
 # ---------------------------------------------------------------------------
 # Finding 2: truncation message mentions reasoning/max_tokens
