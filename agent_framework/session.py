@@ -123,11 +123,11 @@ class SessionStore:
     - Track compaction points for context window management
 
     Args:
-        store_path: Directory to store sessions (default: ~/.hermes/sessions)
+        store_path: Directory to store sessions (default: ~/.serac/sessions)
     """
 
     def __init__(self, store_path: Optional[str] = None):
-        self.store_path = Path(store_path or os.path.expanduser("~/.hermes/sessions"))
+        self.store_path = Path(store_path or os.path.expanduser("~/.serac/sessions"))
         self.store_path.mkdir(parents=True, exist_ok=True)
 
     def _session_path(self, session_id: str) -> Path:

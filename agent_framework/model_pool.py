@@ -53,8 +53,8 @@ class ModelPool:
 
     Example:
         pool = ModelPool()
-        pool.add_slot(VLLMProvider(), max_concurrent=6, priority=0, model_name="vllm-qwen")
-        pool.add_slot(AnthropicProvider(model="claude-sonnet-4"), max_concurrent=2, priority=1, model_name="sonnet")
+        pool.add_slot(VLLMProvider(), max_concurrent=6, priority=0, model_name="vllm-local")
+        pool.add_slot(AnthropicProvider(model="claude-test-sonnet"), max_concurrent=2, priority=1, model_name="sonnet")
 
         # Route 8 workers: 6 → vLLM, 2 → Sonnet
         for _ in range(8):

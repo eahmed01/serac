@@ -205,9 +205,9 @@ class Sandbox:
         script_path = "/tmp/workspace/_sandbox_script.py"
         escaped_code = code.replace("'", "'\\''")
         command = (
-            f"cat > {script_path} << 'HERMES_SANDBOX_EOF'\n"
+            f"cat > {script_path} << 'SERAC_SANDBOX_EOF'\n"
             f"{code}\n"
-            f"HERMES_SANDBOX_EOF\n"
+            f"SERAC_SANDBOX_EOF\n"
             f"cd /repo && python {script_path}"
         )
         return self._run(command, timeout=timeout)

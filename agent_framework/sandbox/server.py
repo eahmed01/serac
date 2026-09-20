@@ -405,6 +405,11 @@ class SandboxServer:
 
     Maintains a shared Python namespace and accepts commands from clients.
     Can listen on either TCP or Unix socket for Docker container communication.
+
+    Note: ``tickers``/``start``/``end`` are opaque pass-through kwargs forwarded
+    to the injected ``sandbox_factory`` (which consumes them as
+    ``sandbox_factory(tickers=..., start=..., end=...)``); the server itself
+    only stores them in ``sandbox_config`` for the namespace's benefit.
     """
 
     def __init__(

@@ -6,7 +6,7 @@
 # Build (from repo root):
 #   docker build -f agent_framework/research.Dockerfile -t research-sandbox:latest .
 #
-# Run (mount repo + workspace + GPU 0 only):
+# Run (mount repo + workspace + GPU 0 only; set SERAC_HOST_REPO):
 #   docker run -d --name research-sandbox \
 #     --gpus '"device=0"' \
 #     --network none \
@@ -14,7 +14,7 @@
 #     --security-opt no-new-privileges \
 #     --read-only \
 #     --tmpfs /tmp:rw,noexec,nosuid,nodev,size=1g \
-#     -v /path/to/repo/0:/repo:ro \
+#     -v "$SERAC_HOST_REPO":/repo:ro \
 #     -v /tmp/agent_workspace:/workspace:rw \
 #     --user $(id -u):$(id -g) \
 #     research-sandbox:latest

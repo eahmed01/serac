@@ -13,11 +13,15 @@ When running on host:
   - The sandbox server listens on localhost:9876
   - The adapter connects via TCP
 
-The persistent sandbox has:
-- `s`: Sandbox instance with loaded OHLCV data
-- `df`: OHLCV DataFrame (from s.ohlcv)
+The persistent sandbox namespace is domain-neutral (see
+agent_framework.sandbox.server):
 - `np`, `pd`: numpy and pandas
-- `check_causality`: causality checker function
+- `df`: data panel (None unless the server was started with one)
+- `s`: sandbox instance (None unless the server was started with a
+  sandbox_factory)
+- `check_causality`: registered only when the server was started with an
+  injected causality_checker
+- Extra globals injected via the server's extra_globals option
 - Any variables created via previous execute() calls
 
 Usage:

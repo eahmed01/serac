@@ -126,7 +126,7 @@ class VLLMProvider(Provider):
     def __init__(
         self,
         base_url: str = "http://localhost:7999/v1",
-        model: str = "Qwen/Qwen3.8-27B-FP8",
+        model: str = "local-model",
         api_key: str = "sk-dummy",
         max_tokens: int = 4096,
         reasoning_effort: str | None = "high",

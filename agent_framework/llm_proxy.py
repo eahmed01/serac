@@ -68,11 +68,11 @@ class LLMProxy:
             await writer.wait_closed()
 
     async def _forward_to_anthropic(self, messages: list, model: str) -> dict:
-        """Forward to Anthropic API."""
-        import aiohttp
+        """Not yet implemented — returns a stub response.
 
-        # This would need proper API key handling
-        # For now, just return a mock response
+        Real forwarding to the Anthropic API (with API key handling) is not
+        implemented; callers currently receive a hardcoded stub payload.
+        """
         return {
             "content": "This is a mock response from Anthropic API",
             "model": model,
@@ -80,30 +80,43 @@ class LLMProxy:
         }
 
     async def _forward_to_openai(self, messages: list, model: str) -> dict:
-        """Forward to OpenAI API."""
-        import aiohttp
+        """Not yet implemented — returns a stub response.
 
-        # This would need proper API key handling
-        # For now, just return a mock response
+        Real forwarding to the OpenAI API (with API key handling) is not
+        implemented; callers currently receive a hardcoded stub payload.
+        """
         return {
             "content": "This is a mock response from OpenAI API",
             "model": model,
             "usage": {"prompt_tokens": 100, "completion_tokens": 50}
         }
 
-    async def start(self) -> None:
-        """Start the proxy server."""
+    async def _bind(self) -> None:
+        """Bind the Unix socket for the proxy server.
+
+        The socket file is created with mode 0o600 so that only the owner
+        (this user) can connect to the proxy; no other local process may.
+        """
         # Remove existing socket if present
         if os.path.exists(self.socket_path):
             os.unlink(self.socket_path)
 
-        self.server = await asyncio.start_unix_server(
-            self.handle_client,
-            path=self.socket_path
-        )
+        # Restrict the socket file to the owner before binding.
+        old_umask = os.umask(0o177)
+        try:
+            self.server = await asyncio.start_unix_server(
+                self.handle_client,
+                path=self.socket_path
+            )
+        finally:
+            os.umask(old_umask)
 
-        # Make socket accessible
-        os.chmod(self.socket_path, 0o777)
+        # Belt and braces: ensure 0o600 regardless of umask handling.
+        os.chmod(self.socket_path, 0o600)
+
+    async def start(self) -> None:
+        """Start the proxy server."""
+        await self._bind()
 
         logger.info("LLM Proxy listening on %s", self.socket_path)
 

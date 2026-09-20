@@ -100,7 +100,7 @@ _DEFAULT_RULES: list[SanitizationRule] = [
     SanitizationRule(re.compile(r'(?:password|secret|token|apikey|api_key)\s*[:=]\s*[^\s]{4,}', re.I), '[SECRET]', 'credential'),
     # Internal hostnames
     SanitizationRule(re.compile(r'\b\d{4}\.\w+\.internal\b'), '[INTERNAL_HOST]', 'internal_network'),
-    SanitizationRule(re.compile(r'\b\d{4}\.hermes\.local\b'), '[INTERNAL_HOST]', 'internal_network'),
+    SanitizationRule(re.compile(r'\b\d{4}\.serac\.local\b'), '[INTERNAL_HOST]', 'internal_network'),
     # AWS access keys (AKIA/ASIA prefix)
     SanitizationRule(re.compile(r'\b[A-Z0-9]{4}(AKIA|ASIA)[A-Z0-9]{16}\b'), '[AWS_KEY]', 'credential'),
     # Database connection strings

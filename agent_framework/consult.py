@@ -25,7 +25,7 @@ Usage:
     # With workspace restriction
     python -m agent_framework.consult "Find security issues" --workspace ~/dev/project/0
 
-    # Programmatic (Hermes integration)
+    # Programmatic (serac integration)
     from agent_framework.consult import consult
     result = consult(
         goal="Research this topic",
@@ -36,10 +36,10 @@ Usage:
 
 Available models:
     local     — vLLM on localhost:7999 (default)
-    opus      — Anthropic Claude Opus 4.8
-    sonnet    — Anthropic Claude Sonnet 5
-    fable     — Anthropic Claude Fable 5
-    gpt55     — OpenAI GPT-5.5
+    opus      — Anthropic flagship alias (placeholder model ID)
+    sonnet    — Anthropic mid-tier alias (placeholder model ID)
+    fable     — Anthropic experimental alias (placeholder model ID)
+    gpt55     — OpenAI flagship alias (placeholder model ID)
     gpt41     — OpenAI GPT-4.1
 
 Default tools (workspace-safe):
@@ -70,7 +70,7 @@ from typing import Any, Optional
 # Load API keys from ~/.exa.api (Exa) and .env files
 _ENV_PATHS = [
     Path.home() / ".exa.api",  # Exa API key
-    Path.home() / ".hermes" / "profiles" / "default" / ".env",
+    Path.home() / ".serac" / "profiles" / "default" / ".env",
 ]
 for _env_path in _ENV_PATHS:
     if _env_path.exists():
@@ -89,38 +89,44 @@ from agent_framework.tools import ToolDef, ToolRegistry
 logger = logging.getLogger(__name__)
 
 # Session storage
-SESSION_DIR = Path.home() / ".hermes" / "agent_sessions"
+SESSION_DIR = Path.home() / ".serac" / "agent_sessions"
 
-# Default workspace root (repo root)
-DEFAULT_WORKSPACE = Path.home() / "dev" / "project" / "0"
+# Default workspace root.
+# Overridable via the SERAC_WORKSPACE environment variable; when unset, the
+# current working directory is used (a neutral default — pass --workspace or
+# set SERAC_WORKSPACE to point at your project).
+DEFAULT_WORKSPACE = Path(os.environ.get("SERAC_WORKSPACE", os.getcwd()))
 
-# Available models — same as consultation_ask
+# Available models — same as consultation_ask.
+# Model IDs below are placeholders: the local vLLM ID matches the default
+# served model, and the API aliases use clearly generic names. Override them
+# per deployment (e.g. via a targets config or environment).
 MODEL_CONFIGS = {
     "local": {
         "provider": "vllm",
         "url": "http://localhost:7999/v1",
-        "model": "Qwen/Qwen3.8-27B-FP8",
+        "model": "local-model",
         "max_tokens": 65536,
         "reasoning_effort": "high",
     },
     "opus": {
         "provider": "anthropic",
-        "model": "claude-opus-4-8",
+        "model": "claude-test-opus",
         "max_tokens": 8192,
     },
     "sonnet": {
         "provider": "anthropic",
-        "model": "claude-sonnet-5",
+        "model": "claude-test-sonnet",
         "max_tokens": 8192,
     },
     "fable": {
         "provider": "anthropic",
-        "model": "claude-fable-5",
+        "model": "claude-test-fable",
         "max_tokens": 8192,
     },
     "gpt55": {
         "provider": "openai",
-        "model": "gpt-5.5",
+        "model": "gpt-test-model",
         "max_tokens": 8192,
     },
     "gpt41": {
@@ -566,11 +572,11 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Models:
-  local     vLLM (Qwen3.6-27B, localhost:7999, free)
-  opus      Claude Opus 4.8 (Anthropic, costs $)
-  sonnet    Claude Sonnet 5 (Anthropic, costs $)
-  fable     Claude Fable 5 (Anthropic, costs $)
-  gpt55     GPT-5.5 (OpenAI, costs $)
+  local     vLLM (local model, localhost:7999, free)
+  opus      Anthropic (placeholder model ID, costs $)
+  sonnet    Anthropic (placeholder model ID, costs $)
+  fable     Anthropic (placeholder model ID, costs $)
+  gpt55     OpenAI (placeholder model ID, costs $)
   gpt41     GPT-4.1 (OpenAI, costs $)
 
 Tools (default: safe read-only):

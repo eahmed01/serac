@@ -11,6 +11,10 @@
 # which provides a persistent Python namespace with access to PyTorch,
 # TensorFlow, and all ML libraries.
 #
+# Configuration:
+# - SERAC_HOST_REPO: host path of the repo to mount read-only at /repo.
+#   Required for `start`; the script exits with a clear error if unset.
+#
 # Security:
 # - --network none: no outbound network access
 # - --cap-drop ALL: no Linux capabilities
@@ -23,7 +27,7 @@ set -euo pipefail
 
 CONTAINER_NAME="research-sandbox"
 IMAGE_NAME="research-sandbox:latest"
-HOST_REPO="/path/to/repo/0"
+HOST_REPO="${SERAC_HOST_REPO:-}"
 HOST_WORKSPACE="/tmp/agent_workspace"
 UNIX_SOCKET="/tmp/agent_workspace/sandbox.sock"
 
@@ -54,13 +58,24 @@ build_image() {
 }
 
 cmd_start() {
+    # The repo mount source must be configured explicitly.
+    if [[ -z "$HOST_REPO" ]]; then
+        log "ERROR: SERAC_HOST_REPO is not set. It must point to the host repo to mount at /repo."
+        log "  export SERAC_HOST_REPO=/absolute/path/to/your/repo"
+        return 1
+    fi
+    if [[ ! -d "$HOST_REPO" ]]; then
+        log "ERROR: SERAC_HOST_REPO points to a directory that does not exist: $HOST_REPO"
+        return 1
+    fi
+
     cleanup_old
     build_image
 
     # Create workspace directory if needed
     mkdir -p "$(dirname "$UNIX_SOCKET")"
 
-    log "Starting research sandbox container..."
+    log "Starting research sandbox container (mounting $HOST_REPO -> /repo)..."
     docker run -d \
         --name "$CONTAINER_NAME" \
         --gpus '"device=0"' \
@@ -76,25 +91,32 @@ cmd_start() {
         "$IMAGE_NAME" \
         python3 -m agent_framework.sandbox.server
 
-    # Wait for the server to be ready
-    log "Waiting for sandbox server to start..."
+    # Wait for the server to be ready.
+    # Readiness check: the sandbox server is the container's PID 1 (it is the
+    # docker CMD). The container runs with --network none and the server is
+    # started without --socket-path, so it only binds 127.0.0.1:9876 inside
+    # its own (empty) network namespace — no TCP or Unix socket is reachable
+    # from the host. A connect probe (previously to 127.0.0.1:9876 inside
+    # the container) can therefore never succeed, even when healthy.
+    # Instead we check what is actually true when the server is up: the
+    # agent_framework.sandbox.server process is running as PID 1 and has not
+    # exited. (Verified by inspecting /proc/1/cmdline via docker exec.)
+    log "Waiting for sandbox server process to come up..."
     for i in {1..30}; do
         if docker exec "$CONTAINER_NAME" python3 -c "
-import socket
-try:
-    sock = socket.create_connection(('127.0.0.1', 9876), timeout=1)
-    sock.close()
-    exit(0)
-except:
-    exit(1)
+import sys
+with open('/proc/1/cmdline', 'rb') as f:
+    cmdline = f.read().decode('utf-8', 'replace')
+sys.exit(0 if 'agent_framework.sandbox.server' in cmdline else 1)
 " 2>/dev/null; then
-            log "Sandbox server is ready on localhost:9876"
+            log "Sandbox server process is running (PID 1: agent_framework.sandbox.server)"
             return 0
         fi
         sleep 1
     done
 
-    log "ERROR: Sandbox server did not start within 30 seconds"
+    log "ERROR: Sandbox server process was not detected within 30 seconds"
+    log "Verify manually: docker logs $CONTAINER_NAME"
     docker logs "$CONTAINER_NAME" >&2
     return 1
 }

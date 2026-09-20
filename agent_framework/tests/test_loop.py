@@ -464,7 +464,7 @@ class TestAgentLoopReset:
 
 
 class TestAgentLoopExhaustionAndTruncation:
-    """Regression tests for the 2026-09-16 empty-output findings:
+    """Regression tests for the empty-output failure mode:
     max_turns exhausted mid-tool-loop must not silently return "", and
     length-truncated completions must fail closed."""
 

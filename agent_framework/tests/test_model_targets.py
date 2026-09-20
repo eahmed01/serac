@@ -16,10 +16,10 @@ def write_config(tmp_path: Path, targets: dict) -> Path:
 
 def test_default_config_resolves_local_target(tmp_path):
     path = write_config(tmp_path, {
-        "local_qwen": {
+        "local_model": {
             "provider": "vllm",
             "endpoint": "http://127.0.0.1:7999/v1",
-            "model": "Qwen/Qwen3.8-27B-FP8",
+            "model": "local-test-model",
             "max_tokens": 24576,
             "vllm": {
                 "reasoning_effort": "xhigh",
@@ -30,11 +30,11 @@ def test_default_config_resolves_local_target(tmp_path):
             },
         },
     })
-    target = model_targets.resolve_model_target(path, "local_qwen", environ={})
+    target = model_targets.resolve_model_target(path, "local_model", environ={})
     assert target.provider == "vllm"
-    assert target.model == "Qwen/Qwen3.8-27B-FP8"
+    assert target.model == "local-test-model"
     assert target.endpoint == "http://127.0.0.1:7999/v1"
-    assert target.manifest()["logical_target"] == "local_qwen"
+    assert target.manifest()["logical_target"] == "local_model"
     assert target.max_tokens == 24576
     assert target.vllm_options == {
         "reasoning_effort": "xhigh",
@@ -49,7 +49,7 @@ def test_openai_target_requires_named_credential_without_exposing_value(tmp_path
     path = write_config(tmp_path, {
         "openai_test": {
             "provider": "openai",
-            "model": "gpt-5.6-luna",
+            "model": "gpt-test-model",
             "credential_env": "TEST_OPENAI_KEY",
         },
     })
@@ -112,7 +112,7 @@ def test_factory_maps_openai_settings_and_keeps_key_out_of_target(monkeypatch, t
     path = write_config(tmp_path, {
         "openai": {
             "provider": "openai",
-            "model": "gpt-5.6-luna",
+            "model": "gpt-test-model",
             "max_tokens": 2048,
             "credential_env": "TEST_OPENAI_KEY",
             "openai": {"base_url": "https://api.example.test/v1", "max_tokens_parameter": "max_completion_tokens"},
@@ -128,7 +128,7 @@ def test_factory_maps_openai_settings_and_keeps_key_out_of_target(monkeypatch, t
     model_targets.make_provider(target, environ={"TEST_OPENAI_KEY": "sentinel-secret"})
     assert captured == {
         "api_key": "sentinel-secret",
-        "model": "gpt-5.6-luna",
+        "model": "gpt-test-model",
         "max_tokens": 2048,
         "max_tokens_parameter": "max_completion_tokens",
         "base_url": "https://api.example.test/v1",
@@ -140,7 +140,7 @@ def test_factory_maps_openai_responses_settings(monkeypatch, tmp_path):
     path = write_config(tmp_path, {
         "openai": {
             "provider": "openai",
-            "model": "gpt-5.6-luna",
+            "model": "gpt-test-model",
             "credential_env": "TEST_OPENAI_KEY",
             "openai": {
                 "api_mode": "responses",
@@ -158,7 +158,7 @@ def test_factory_maps_openai_responses_settings(monkeypatch, tmp_path):
     model_targets.make_provider(target, environ={"TEST_OPENAI_KEY": "sentinel-secret"})
     assert captured == {
         "api_key": "sentinel-secret",
-        "model": "gpt-5.6-luna",
+        "model": "gpt-test-model",
         "max_tokens": 4096,
         "max_tokens_parameter": "max_tokens",
         "api_mode": "responses",

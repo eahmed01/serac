@@ -166,7 +166,7 @@ class TestOpenAIProvider:
     def test_responses_tool_schema_and_function_call(self):
         p = OpenAIProvider(
             api_key="test-key",
-            model="gpt-5.6-luna",
+            model="gpt-test-model",
             api_mode="responses",
             reasoning_effort="medium",
         )
@@ -198,7 +198,7 @@ class TestOpenAIProvider:
             ], tools=tools)
 
         kwargs = create.call_args.kwargs
-        assert kwargs["model"] == "gpt-5.6-luna"
+        assert kwargs["model"] == "gpt-test-model"
         assert kwargs["max_output_tokens"] == 4096
         assert kwargs["reasoning"] == {"effort": "medium"}
         assert kwargs["instructions"] == "Use tools."

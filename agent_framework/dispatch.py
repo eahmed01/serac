@@ -11,7 +11,7 @@ Usage:
     # With specific tools
     python -m agent_framework.dispatch_agent "Analyze the code" --tools read_file,code_search,terminal
 
-    # As a Hermes consult tool (programmatic)
+    # As a serac consult tool (programmatic)
     from agent_framework.dispatch import dispatch_agent
     result = dispatch_agent(
         goal="Research this topic",
@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 
 
 # Session storage path
-SESSION_DIR = Path("~/.hermes/agent_sessions").expanduser()
+SESSION_DIR = Path("~/.serac/agent_sessions").expanduser()
 
 
 def load_session(session_id: str) -> Optional[dict[str, Any]]:
@@ -74,7 +74,7 @@ def dispatch_agent(
     max_turns: int = 10,
     max_tokens: int = 4096,
     vllm_url: str = "http://localhost:7999/v1",
-    vllm_model: str = "Qwen/Qwen3.8-27B-FP8",
+    vllm_model: str = "local-model",
     reasoning_effort: str = "high",
     max_seconds: int | None = 900,
     system_prompt: Optional[str] = None,
@@ -229,7 +229,7 @@ Examples:
     parser.add_argument("--max-turns", type=int, default=10, help="Max turns (default: 10)")
     parser.add_argument("--max-tokens", type=int, default=4096, help="Max tokens (default: 4096)")
     parser.add_argument("--vllm-url", default="http://localhost:7999/v1", help="vLLM URL")
-    parser.add_argument("--vllm-model", default="Qwen/Qwen3.6-27B-FP8", help="Model name")
+    parser.add_argument("--vllm-model", default="local-model", help="Model name")
     parser.add_argument("--json", action="store_true", help="Output as JSON")
 
     args = parser.parse_args()
